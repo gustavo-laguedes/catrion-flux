@@ -2,11 +2,10 @@
 // Firebase / Firestore
 // =========================
 
-// firebase vem do script do index.html (firebase-app-compat + firestore-compat)
 const db = firebase.firestore();
 
 // =========================
-// Utilidades de data e dinheiro
+— Utilidades de data e dinheiro
 // =========================
 
 function hojeISO() {
@@ -29,7 +28,6 @@ function formatarValorReal(valor) {
   });
 }
 
-// Máscara tipo "digita e vai jogando para casas decimais"
 function aplicarMascaraMoeda(input) {
   let digits = input.value.replace(/\D/g, "");
   if (!digits) {
@@ -43,7 +41,6 @@ function aplicarMascaraMoeda(input) {
   });
 }
 
-// Converte string "1.234,56" => 1234.56
 function parseMoedaBR(str) {
   if (!str) return 0;
   const limpo = str.replace(/\./g, "").replace(",", ".");
@@ -55,11 +52,14 @@ function parseMoedaBR(str) {
 // Estado em memória
 // =========================
 
-let transacoes = []; // {id, tipo, valor, descricao, dataISO, contaId, parcelaIndex, createdAt}
-let contas = [];     // {id, descricao, valorTotal, qtdParcelas, primeiraDataISO, createdAt}
+let transacoes = [];
+let contas = [];
 
-let modoExclusaoContas = false;
+let modoEdicaoContas = false;
 let contaPendenteExclusaoId = null;
+let contaEmEdicaoId = null;
+
+let modoExclusaoMovimentos = false;
 
 // =========================
 // Elementos da UI
@@ -82,13 +82,15 @@ const selectParcelaConta = document.getElementById("parcela-conta-select");
 
 const inputDataConsulta = document.getElementById("data-consulta");
 const listaDiaria = document.getElementById("lista-diaria");
+const btnMovDelMode = document.getElementById("btn-mov-del-mode");
 
 const btnContaAdd = document.getElementById("btn-conta-add");
-const btnContaDelMode = document.getElementById("btn-conta-del-mode");
+const btnContaEditMode = document.getElementById("btn-conta-edit-mode");
 const inputFiltroMesAno = document.getElementById("filtro-mes-ano");
 const listaContas = document.getElementById("lista-contas");
 
 const modalConta = document.getElementById("modal-conta");
+const modalContaTitulo = document.getElementById("modal-conta-titulo");
 const btnModalContaFechar = document.getElementById("modal-conta-fechar");
 const formConta = document.getElementById("form-conta");
 const inputContaDescricao = document.getElementById("conta-descricao");
@@ -96,6 +98,7 @@ const inputContaValorTotal = document.getElementById("conta-valor-total");
 const inputContaQtdParcelas = document.getElementById("conta-qtd-parcelas");
 const inputContaValorParcela = document.getElementById("conta-valor-parcela");
 const inputContaPrimeiraData = document.getElementById("conta-primeira-data");
+const btnSalvarConta = document.getElementById("btn-salvar-conta");
 
 const modalConfirmaExclusao = document.getElementById("modal-confirma-excluir");
 const btnCancelarExclusao = document.getElementById("btn-cancelar-exclusao");
@@ -118,13 +121,25 @@ function inicializarDatas() {
 
 function atualizarVisibilidadeContaPredefinida() {
   const tipo = inputTipo.value;
-  const mostrar = tipo === "conta";
-  campoContaPredefinida.style.display = mostrar ? "flex" : "none";
-  campoParcelaConta.style.display = mostrar ? "flex" : "none";
+  const isConta = tipo === "conta";
+
+  campoContaPredefinida.style.display = isConta ? "flex" : "none";
+  campoParcelaConta.style.display = isConta ? "flex" : "none";
+
+  inputValor.readOnly = isConta;
+
+  if (!isConta) {
+    // volta ao modo manual
+    selectContaPredefinida.value = "";
+    selectParcelaConta.innerHTML = `<option value="">— selecione —</option>`;
+    inputValor.value = "0,00";
+  } else {
+    atualizarValorPorParcelaSelecionada();
+  }
 }
 
 // =========================
-// Movimento do dia e do mês
+// Movimento do dia e mês
 // =========================
 
 function atualizarMovimentoHoje() {
@@ -134,7 +149,7 @@ function atualizarMovimentoHoje() {
     .filter(t => t.dataISO === hoje)
     .reduce((acc, t) => {
       if (t.tipo === "entrada") return acc + t.valor;
-      return acc - t.valor; // saída ou conta
+      return acc - t.valor;
     }, 0);
 
   spanMovimentoHoje.textContent = formatarValorReal(mov);
@@ -174,6 +189,7 @@ function atualizarMovimentoMes() {
 // =========================
 
 inputValor.addEventListener("input", () => {
+  if (inputTipo.value === "conta") return; // conta predefinida não digita
   aplicarMascaraMoeda(inputValor);
 });
 
@@ -205,7 +221,7 @@ inputTipo.addEventListener("change", atualizarVisibilidadeContaPredefinida);
 formLancamento.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const tipo = inputTipo.value; // entrada, saida, conta
+  const tipo = inputTipo.value;
   const valor = parseMoedaBR(inputValor.value);
   if (!valor || valor <= 0) return;
 
@@ -220,6 +236,10 @@ formLancamento.addEventListener("submit", async (e) => {
     parcelaIndex = selectParcelaConta.value
       ? parseInt(selectParcelaConta.value, 10)
       : null;
+    if (!contaId || parcelaIndex === null) {
+      alert("Selecione a conta e a parcela.");
+      return;
+    }
   }
 
   const transacao = {
@@ -249,6 +269,11 @@ formLancamento.addEventListener("submit", async (e) => {
 // =========================
 
 inputDataConsulta.addEventListener("change", () => {
+  renderizarListaDiaria();
+});
+
+btnMovDelMode.addEventListener("click", () => {
+  modoExclusaoMovimentos = !modoExclusaoMovimentos;
   renderizarListaDiaria();
 });
 
@@ -285,6 +310,24 @@ function renderizarListaDiaria() {
 
     li.appendChild(divInfo);
     li.appendChild(spanValor);
+
+    if (modoExclusaoMovimentos) {
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn-icon";
+      btnDel.textContent = "−";
+      btnDel.addEventListener("click", async () => {
+        const ok = confirm("Excluir este lançamento?");
+        if (!ok) return;
+        try {
+          await db.collection("transacoes").doc(t.id).delete();
+        } catch (err) {
+          console.error("Erro ao excluir lançamento:", err);
+          alert("Não foi possível excluir este lançamento.");
+        }
+      });
+      li.appendChild(btnDel);
+    }
+
     listaDiaria.appendChild(li);
   });
 }
@@ -294,11 +337,11 @@ function renderizarListaDiaria() {
 // =========================
 
 btnContaAdd.addEventListener("click", () => {
-  abrirModalConta();
+  abrirModalConta(null);
 });
 
-btnContaDelMode.addEventListener("click", () => {
-  modoExclusaoContas = !modoExclusaoContas;
+btnContaEditMode.addEventListener("click", () => {
+  modoEdicaoContas = !modoEdicaoContas;
   renderizarContas();
 });
 
@@ -312,7 +355,7 @@ formConta.addEventListener("submit", async (e) => {
   const descricao = inputContaDescricao.value.trim();
   if (!descricao) return;
 
-  if (contas.some(c => c.descricao.toLowerCase() === descricao.toLowerCase())) {
+  if (contas.some(c => c.descricao.toLowerCase() === descricao.toLowerCase() && c.id !== contaEmEdicaoId)) {
     alert("Já existe uma conta com esta descrição.");
     return;
   }
@@ -323,16 +366,22 @@ formConta.addEventListener("submit", async (e) => {
 
   if (!valorTotal || valorTotal <= 0 || !qtdParcelas || qtdParcelas <= 0) return;
 
-  const conta = {
+  const contaData = {
     descricao,
     valorTotal,
     qtdParcelas,
-    primeiraDataISO,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    primeiraDataISO
   };
 
   try {
-    await db.collection("contas").add(conta);
+    if (contaEmEdicaoId) {
+      await db.collection("contas").doc(contaEmEdicaoId).update(contaData);
+    } else {
+      await db.collection("contas").add({
+        ...contaData,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
   } catch (err) {
     console.error("Erro ao salvar conta:", err);
     alert("Não foi possível salvar a conta.");
@@ -365,7 +414,26 @@ inputFiltroMesAno.addEventListener("change", () => {
   renderizarContas();
 });
 
-function abrirModalConta() {
+function abrirModalConta(conta) {
+  if (conta) {
+    contaEmEdicaoId = conta.id;
+    modalContaTitulo.textContent = "Editar conta";
+    btnSalvarConta.textContent = "Salvar alterações";
+
+    inputContaDescricao.value = conta.descricao;
+    inputContaValorTotal.value = conta.valorTotal.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    inputContaQtdParcelas.value = conta.qtdParcelas;
+    inputContaPrimeiraData.value = conta.primeiraDataISO;
+    atualizarValorParcelaConta();
+  } else {
+    contaEmEdicaoId = null;
+    modalContaTitulo.textContent = "Nova conta mensal";
+    btnSalvarConta.textContent = "Salvar conta";
+    limparFormularioConta();
+  }
   modalConta.classList.add("visivel");
 }
 
@@ -402,9 +470,17 @@ function preencherSelectContas() {
     selectContaPredefinida.appendChild(opt);
   });
   preencherSelectParcelas();
+  atualizarValorPorParcelaSelecionada();
 }
 
-selectContaPredefinida.addEventListener("change", preencherSelectParcelas);
+selectContaPredefinida.addEventListener("change", () => {
+  preencherSelectParcelas();
+  atualizarValorPorParcelaSelecionada();
+});
+
+selectParcelaConta.addEventListener("change", () => {
+  atualizarValorPorParcelaSelecionada();
+});
 
 function preencherSelectParcelas() {
   selectParcelaConta.innerHTML = `<option value="">— selecione —</option>`;
@@ -415,13 +491,32 @@ function preencherSelectParcelas() {
   const conta = contas.find(c => c.id === contaId);
   if (!conta) return;
 
-  // (POR ENQUANTO) deixa escolher qualquer parcela
   for (let i = 1; i <= conta.qtdParcelas; i++) {
     const opt = document.createElement("option");
-    opt.value = i - 1; // index
+    opt.value = i - 1;
     opt.textContent = `${i}ª parcela`;
     selectParcelaConta.appendChild(opt);
   }
+}
+
+function atualizarValorPorParcelaSelecionada() {
+  if (inputTipo.value !== "conta") return;
+
+  const contaId = selectContaPredefinida.value;
+  const idxStr = selectParcelaConta.value;
+  if (!contaId || idxStr === "") {
+    inputValor.value = "0,00";
+    return;
+  }
+
+  const conta = contas.find(c => c.id === contaId);
+  if (!conta) return;
+
+  const valorParcela = conta.valorTotal / conta.qtdParcelas;
+  inputValor.value = valorParcela.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 // =========================
@@ -459,6 +554,7 @@ function renderizarContas() {
   if (!mesAno) return;
 
   const [anoFiltro, mesFiltro] = mesAno.split("-").map(v => parseInt(v, 10));
+  const hoje = hojeISO();
 
   contas.forEach(conta => {
     const parcelas = obterParcelasDaConta(conta);
@@ -504,18 +600,37 @@ function renderizarContas() {
       const caixinha = document.createElement("div");
       caixinha.className = "status-caixinha";
 
-      li.appendChild(divMain);
+      // verifica se essa parcela está paga
+      const paga = transacoes.some(t =>
+        t.tipo === "conta" &&
+        t.contaId === conta.id &&
+        t.parcelaIndex === parcela.index
+      );
 
-      if (modoExclusaoContas) {
+      if (paga) {
+        caixinha.classList.add("paga");
+      } else if (parcela.dataISO < hoje) {
+        caixinha.classList.add("atrasada");
+      }
+
+      li.appendChild(divMain);
+      li.appendChild(caixinha);
+
+      if (modoEdicaoContas) {
+        li.addEventListener("click", (ev) => {
+          // se clicou no botão -, não abrir edição
+          if (ev.target.classList.contains("btn-icon")) return;
+          abrirModalConta(conta);
+        });
+
         const btnDel = document.createElement("button");
         btnDel.className = "btn-icon";
         btnDel.textContent = "−";
-        btnDel.addEventListener("click", () => {
+        btnDel.addEventListener("click", (ev) => {
+          ev.stopPropagation();
           abrirModalExclusao(conta.id);
         });
         li.appendChild(btnDel);
-      } else {
-        li.appendChild(caixinha);
       }
 
       listaContas.appendChild(li);

@@ -5,7 +5,7 @@
 const db = firebase.firestore();
 
 // =========================
-— Utilidades de data e dinheiro
+// Utilidades de data e dinheiro
 // =========================
 
 function hojeISO() {
@@ -62,7 +62,7 @@ let contaEmEdicaoId = null;
 let modoExclusaoMovimentos = false;
 
 // =========================
-// Elementos da UI
+– Elementos da UI
 // =========================
 
 const spanDataHoje = document.getElementById("data-hoje");
@@ -79,6 +79,8 @@ const campoContaPredefinida = document.getElementById("campo-conta-predefinida")
 const campoParcelaConta = document.getElementById("campo-parcela-conta");
 const selectContaPredefinida = document.getElementById("conta-predefinida-select");
 const selectParcelaConta = document.getElementById("parcela-conta-select");
+
+const campoDescricao = document.getElementById("campo-descricao");
 
 const inputDataConsulta = document.getElementById("data-consulta");
 const listaDiaria = document.getElementById("lista-diaria");
@@ -123,17 +125,31 @@ function atualizarVisibilidadeContaPredefinida() {
   const tipo = inputTipo.value;
   const isConta = tipo === "conta";
 
+  // campos específicos de conta
   campoContaPredefinida.style.display = isConta ? "flex" : "none";
   campoParcelaConta.style.display = isConta ? "flex" : "none";
 
+  // descrição só aparece para entrada / saída
+  if (campoDescricao) {
+    if (!tipo || tipo === "conta") {
+      campoDescricao.style.display = "none";
+    } else {
+      campoDescricao.style.display = "flex";
+    }
+  }
+
+  // valor digitável só para entrada / saída
   inputValor.readOnly = isConta;
 
   if (!isConta) {
-    // volta ao modo manual
+    // modo entrada/saída ou nada selecionado
+    if (!tipo) {
+      inputValor.value = "0,00";
+    }
     selectContaPredefinida.value = "";
     selectParcelaConta.innerHTML = `<option value="">— selecione —</option>`;
-    inputValor.value = "0,00";
   } else {
+    // modo conta predefinida: valor vem da parcela
     atualizarValorPorParcelaSelecionada();
   }
 }
@@ -222,24 +238,35 @@ formLancamento.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const tipo = inputTipo.value;
+  if (!tipo) {
+    alert("Selecione o tipo de lançamento.");
+    return;
+  }
+
   const valor = parseMoedaBR(inputValor.value);
   if (!valor || valor <= 0) return;
 
-  const descricao = inputDescricao.value.trim() || "(sem descrição)";
   const dataISO = inputDataLancamento.value || hojeISO();
 
   let contaId = null;
   let parcelaIndex = null;
+  let descricao;
 
   if (tipo === "conta") {
     contaId = selectContaPredefinida.value || null;
     parcelaIndex = selectParcelaConta.value
       ? parseInt(selectParcelaConta.value, 10)
       : null;
+
     if (!contaId || parcelaIndex === null) {
       alert("Selecione a conta e a parcela.");
       return;
     }
+
+    const conta = contas.find(c => c.id === contaId);
+    descricao = conta ? conta.descricao : "Conta predefinida";
+  } else {
+    descricao = inputDescricao.value.trim() || "(sem descrição)";
   }
 
   const transacao = {
@@ -600,7 +627,6 @@ function renderizarContas() {
       const caixinha = document.createElement("div");
       caixinha.className = "status-caixinha";
 
-      // verifica se essa parcela está paga
       const paga = transacoes.some(t =>
         t.tipo === "conta" &&
         t.contaId === conta.id &&
@@ -618,7 +644,6 @@ function renderizarContas() {
 
       if (modoEdicaoContas) {
         li.addEventListener("click", (ev) => {
-          // se clicou no botão -, não abrir edição
           if (ev.target.classList.contains("btn-icon")) return;
           abrirModalConta(conta);
         });

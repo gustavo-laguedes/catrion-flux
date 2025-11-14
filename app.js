@@ -123,11 +123,11 @@ function atualizarVisibilidadeContaPredefinida() {
 
 inicializarDatas();
 atualizarVisibilidadeContaPredefinida();
-atualizarMovimentoHoje();
-atualizarMovimentoMes();
+atualizarMovimentoHoje();   // isso já chama atualizarMovimentoMes()
 renderizarListaDiaria();
 renderizarContas();
 preencherSelectContas();
+
 
 
 // =========================
@@ -136,6 +136,7 @@ preencherSelectContas();
 
 function atualizarMovimentoHoje() {
   const hoje = hojeISO();
+
   const mov = transacoes
     .filter(t => t.dataISO === hoje)
     .reduce((acc, t) => {
@@ -143,9 +144,10 @@ function atualizarMovimentoHoje() {
       return acc - t.valor; // saída ou conta
     }, 0);
 
+  // texto
   spanMovimentoHoje.textContent = formatarValorReal(mov);
 
-  // controle de cor conforme o sinal
+  // cores
   spanMovimentoHoje.classList.remove("saldo-positivo", "saldo-negativo", "saldo-zero");
   if (mov > 0) {
     spanMovimentoHoje.classList.add("saldo-positivo");
@@ -155,8 +157,10 @@ function atualizarMovimentoHoje() {
     spanMovimentoHoje.classList.add("saldo-zero");
   }
 
+  // sempre que o dia muda, atualiza o mês também
   atualizarMovimentoMes();
 }
+
 
 function atualizarMovimentoMes() {
   if (!spanMovimentoMes) return;
@@ -166,6 +170,7 @@ function atualizarMovimentoMes() {
 
   const movMes = transacoes.reduce((acc, t) => {
     if (!t.dataISO) return acc;
+
     const [ano, mes] = t.dataISO.split("-").map(n => parseInt(n, 10));
     if (ano !== anoRef || mes !== mesRef) return acc;
 

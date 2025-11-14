@@ -2,6 +2,8 @@
 // Utilidades de data e dinheiro
 // =========================
 
+const db = window.db;
+
 function hojeISO() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -50,6 +52,37 @@ function parseMoedaBR(str) {
 
 let transacoes = []; // {id, tipo, valor, descricao, dataISO, contaId, parcelaIndex}
 let contas = [];     // {id, descricao, valorTotal, qtdParcelas, primeiraDataISO}
+
+function observarTransacoes() {
+  db.collection("transacoes")
+    .orderBy("dataISO")
+    .orderBy("createdAt")
+    .onSnapshot((snapshot) => {
+      const novas = [];
+      snapshot.forEach((doc) => {
+        novas.push({ id: doc.id, ...doc.data() });
+      });
+      transacoes = novas;
+      atualizarMovimentoHoje();
+      renderizarListaDiaria();
+      renderizarContas(); // se futuramente quisermos amarrar parcelas pagas
+    });
+}
+
+function observarContas() {
+  db.collection("contas")
+    .orderBy("descricao")
+    .onSnapshot((snapshot) => {
+      const novas = [];
+      snapshot.forEach((doc) => {
+        novas.push({ id: doc.id, ...doc.data() });
+      });
+      contas = novas;
+      preencherSelectContas();
+      renderizarContas();
+    });
+}
+
 
 // controle de exclusão de conta
 let modoExclusaoContas = false;
@@ -123,10 +156,11 @@ function atualizarVisibilidadeContaPredefinida() {
 
 inicializarDatas();
 atualizarVisibilidadeContaPredefinida();
-atualizarMovimentoHoje();   // isso já chama atualizarMovimentoMes()
-renderizarListaDiaria();
-renderizarContas();
-preencherSelectContas();
+
+// Começa a ouvir o banco
+observarContas();
+observarTransacoes();
+
 
 
 
@@ -215,7 +249,7 @@ function atualizarValorParcelaConta() {
 
 inputTipo.addEventListener("change", atualizarVisibilidadeContaPredefinida);
 
-formLancamento.addEventListener("submit", (e) => {
+formLancamento.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const tipo = inputTipo.value; // entrada, saida, conta
@@ -230,25 +264,31 @@ formLancamento.addEventListener("submit", (e) => {
 
   if (tipo === "conta") {
     contaId = selectContaPredefinida.value || null;
-    parcelaIndex = selectParcelaConta.value ? parseInt(selectParcelaConta.value, 10) : null;
+    parcelaIndex = selectParcelaConta.value
+      ? parseInt(selectParcelaConta.value, 10)
+      : null;
   }
 
   const transacao = {
-    id: crypto.randomUUID(),
     tipo,
     valor,
     descricao,
     dataISO,
     contaId,
-    parcelaIndex
+    parcelaIndex,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  transacoes.push(transacao);
-  atualizarMovimentoHoje();
-  renderizarListaDiaria();
-  // No futuro: atualizar status de parcelas pagas aqui
+  try {
+    await db.collection("transacoes").add(transacao);
+  } catch (err) {
+    console.error("Erro ao salvar transação:", err);
+    alert("Não foi possível salvar o lançamento. Tenta novamente.");
+    return;
+  }
 
-  // Limpar campos principais
+  // onSnapshot vai atualizar a UI, então não precisa mexer em transacoes aqui
+
   inputValor.value = "0,00";
   inputDescricao.value = "";
 });
@@ -315,13 +355,12 @@ btnModalContaFechar.addEventListener("click", () => {
   fecharModalConta();
 });
 
-formConta.addEventListener("submit", (e) => {
+formConta.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const descricao = inputContaDescricao.value.trim();
   if (!descricao) return;
 
-  // não permitir descrições repetidas
   if (contas.some(c => c.descricao.toLowerCase() === descricao.toLowerCase())) {
     alert("Já existe uma conta com esta descrição.");
     return;
@@ -334,35 +373,45 @@ formConta.addEventListener("submit", (e) => {
   if (!valorTotal || valorTotal <= 0 || !qtdParcelas || qtdParcelas <= 0) return;
 
   const conta = {
-    id: crypto.randomUUID(),
     descricao,
     valorTotal,
     qtdParcelas,
-    primeiraDataISO
+    primeiraDataISO,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  contas.push(conta);
+  try {
+    await db.collection("contas").add(conta);
+  } catch (err) {
+    console.error("Erro ao salvar conta:", err);
+    alert("Não foi possível salvar a conta. Tenta novamente.");
+    return;
+  }
 
   fecharModalConta();
   limparFormularioConta();
-  preencherSelectContas();
-  renderizarContas();
+  // onSnapshot vai cuidar de atualizar contas, select, lista etc.
 });
+
 
 btnCancelarExclusao.addEventListener("click", () => {
   contaPendenteExclusaoId = null;
   fecharModalExclusao();
 });
 
-btnConfirmarExclusao.addEventListener("click", () => {
+btnConfirmarExclusao.addEventListener("click", async () => {
   if (contaPendenteExclusaoId) {
-    contas = contas.filter(c => c.id !== contaPendenteExclusaoId);
+    try {
+      await db.collection("contas").doc(contaPendenteExclusaoId).delete();
+    } catch (err) {
+      console.error("Erro ao excluir conta:", err);
+      alert("Não foi possível excluir esta conta.");
+    }
     contaPendenteExclusaoId = null;
-    preencherSelectContas();
-    renderizarContas();
   }
   fecharModalExclusao();
 });
+
 
 inputFiltroMesAno.addEventListener("change", () => {
   renderizarContas();

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finanças dos Muzis</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>Finanças dos Muzis</h1>
+      <span class="topbar-icon">🐈‍⬛</span>
+    </div>
+    <p class="subtitle">"O amor tudo suporta." — 1Co 13:7</p>
+  </header>
+
+  <main class="container">
+    <!-- Lançamento do dia -->
+    <section class="card card-lancamento">
+      <h2>Lançamento do dia</h2>
+
+      <div class="linha-info-central">
+        <span id="data-hoje" class="data-hoje"></span>
+      </div>
+
+      <div class="linha-info-central">
+        <span class="label-saldo">Movimento total de hoje</span>
+        <span id="movimento-hoje" class="valor-saldo">R$ 0,00</span>
+      </div>
+
+      <form id="form-lancamento" class="form-lancamento">
+        <div class="campo">
+          <label for="tipo">Tipo de lançamento</label>
+          <select id="tipo" required>
+            <option value="saida">Saída</option>
+            <option value="entrada">Entrada</option>
+            <option value="conta">Conta predefinida</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="valor">Valor</label>
+          <input
+            id="valor"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="0,00"
+            required
+          />
+        </div>
+
+        <div class="campo campo-opcional conta-predefinida-campo" id="campo-conta-predefinida">
+          <label for="conta-predefinida-select">Conta predefinida</label>
+          <select id="conta-predefinida-select">
+            <option value="">— selecione —</option>
+          </select>
+        </div>
+
+        <div class="campo campo-opcional conta-predefinida-campo" id="campo-parcela-conta">
+          <label for="parcela-conta-select">Parcela</label>
+          <select id="parcela-conta-select">
+            <option value="">— selecione —</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="descricao">Descrição</label>
+          <input
+            id="descricao"
+            type="text"
+            placeholder="Ex: mercado, salário, cartão..."
+          />
+        </div>
+
+        <div class="campo">
+          <label for="data-lancamento">Data do lançamento</label>
+          <input id="data-lancamento" type="date" required />
+        </div>
+
+        <button type="submit" class="btn-principal">
+          Lançar
+        </button>
+      </form>
+    </section>
+
+    <!-- Consulta diária -->
+    <section class="card card-consulta-dia">
+      <h2>Consulta diária de movimentações</h2>
+
+      <div class="campo campo-inline">
+        <label for="data-consulta">Data</label>
+        <input id="data-consulta" type="date" />
+      </div>
+
+      <ul id="lista-diaria" class="lista-movimentos">
+        <!-- preenche via JS -->
+      </ul>
+    </section>
+
+    <!-- Contas e Parcelas -->
+    <section class="card card-contas">
+      <div class="titulo-contas">
+        <h2>Contas e parcelas</h2>
+        <div class="botoes-contas">
+          <button type="button" class="btn-icon" id="btn-conta-add">＋</button>
+          <button type="button" class="btn-icon" id="btn-conta-del-mode">−</button>
+        </div>
+      </div>
+
+      <div class="filtros-contas">
+        <label for="filtro-mes-ano">Mês / ano</label>
+        <input id="filtro-mes-ano" type="month" />
+      </div>
+
+      <ul id="lista-contas" class="lista-contas">
+        <!-- preenche via JS -->
+      </ul>
+    </section>
+  </main>
+
+  <!-- Modal nova conta -->
+  <div class="modal-backdrop" id="modal-conta">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Nova conta mensal</h3>
+        <button type="button" class="btn-close" id="modal-conta-fechar">✕</button>
+      </div>
+
+      <form id="form-conta" class="form-conta">
+        <div class="campo">
+          <label for="conta-descricao">Descrição (única)</label>
+          <input
+            id="conta-descricao"
+            type="text"
+            placeholder="Ex: Cartão Nubank, Aluguel..."
+            required
+          />
+        </div>
+
+        <div class="campo">
+          <label for="conta-valor-total">Valor total</label>
+          <input
+            id="conta-valor-total"
+            type="text"
+            inputmode="decimal"
+            placeholder="0,00"
+            required
+          />
+        </div>
+
+        <div class="campo">
+          <label for="conta-qtd-parcelas">Número de parcelas</label>
+          <input
+            id="conta-qtd-parcelas"
+            type="number"
+            min="1"
+            step="1"
+            value="1"
+            required
+          />
+        </div>
+
+        <div class="campo">
+          <label>Valor por parcela</label>
+          <input
+            id="conta-valor-parcela"
+            type="text"
+            disabled
+            class="campo-readonly"
+          />
+        </div>
+
+        <div class="campo">
+          <label for="conta-primeira-data">Primeira parcela em</label>
+          <input
+            id="conta-primeira-data"
+            type="date"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-principal full-width">
+          Salvar conta
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal confirmação exclusão -->
+  <div class="modal-backdrop" id="modal-confirma-excluir">
+    <div class="modal modal-pequeno">
+      <p>Tem certeza que deseja excluir esta conta?</p>
+      <div class="modal-acoes">
+        <button type="button" class="btn-secundario" id="btn-cancelar-exclusao">
+          Não
+        </button>
+        <button type="button" class="btn-perigo" id="btn-confirmar-exclusao">
+          Sim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="rodape">
+    <p>Finanças dos Muzis — versão protótipo</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

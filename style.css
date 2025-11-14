@@ -60,6 +60,23 @@ body {
   color: #34363b;
 }
 
+.card-lancamento-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-lancamento-header h2 {
+  margin-bottom: 0;
+}
+
+.resumo-mes {
+  font-size: 0.8rem;
+  color: #7b7e85;
+}
+
+
 .linha-info-central {
   display: flex;
   flex-direction: column;
@@ -80,8 +97,21 @@ body {
 .valor-saldo {
   font-size: 1.4rem;
   font-weight: 600;
-  color: #2c6b3f;
 }
+
+/* cores do movimento do dia */
+.saldo-positivo {
+  color: #2c6b3f; /* verde */
+}
+
+.saldo-negativo {
+  color: #d9534f; /* vermelho */
+}
+
+.saldo-zero {
+  color: #7b7e85; /* cinza neutro */
+}
+
 
 /* Formulários */
 

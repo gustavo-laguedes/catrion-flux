@@ -38,21 +38,22 @@
         <div class="campo">
           <label for="tipo">Tipo de lançamento</label>
           <select id="tipo" required>
+            <option value="">— selecione —</option>
             <option value="saida">Saída</option>
             <option value="entrada">Entrada</option>
             <option value="conta">Conta predefinida</option>
           </select>
         </div>
 
-        <!-- AGORA A ORDEM: conta, parcela, valor -->
-        <div class="campo campo-opcional conta-predefinida-campo" id="campo-conta-predefinida">
+        <!-- Campos específicos de conta predefinida -->
+        <div class="campo campo-opcional conta-predefinida-campo" id="campo-conta-predefinida" style="display:none">
           <label for="conta-predefinida-select">Conta predefinida</label>
           <select id="conta-predefinida-select">
             <option value="">— selecione —</option>
           </select>
         </div>
 
-        <div class="campo campo-opcional conta-predefinida-campo" id="campo-parcela-conta">
+        <div class="campo campo-opcional conta-predefinida-campo" id="campo-parcela-conta" style="display:none">
           <label for="parcela-conta-select">Parcela</label>
           <select id="parcela-conta-select">
             <option value="">— selecione —</option>
@@ -71,7 +72,7 @@
           />
         </div>
 
-        <div class="campo">
+        <div class="campo" id="campo-descricao">
           <label for="descricao">Descrição</label>
           <input
             id="descricao"

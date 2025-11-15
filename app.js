@@ -5,7 +5,7 @@
 const db = firebase.firestore();
 
 // =========================
-// Utilidades de data e dinheiro
+– Utilidades de data e dinheiro
 // =========================
 
 function hojeISO() {
@@ -81,16 +81,9 @@ const selectContaPredefinida = document.getElementById("conta-predefinida-select
 const selectParcelaConta = document.getElementById("parcela-conta-select");
 
 const campoDescricao = document.getElementById("campo-descricao");
-const inputValor = document.getElementById("valor");
-const inputDescricao = document.getElementById("descricao");
-const inputDataLancamento = document.getElementById("data-lancamento");
-
-const campoContaPredefinida = document.getElementById("campo-conta-predefinida");
-const campoParcelaConta = document.getElementById("campo-parcela-conta");
-...
-const campoDescricao = document.getElementById("campo-descricao");
 const campoEstabelecimento = document.getElementById("campo-estabelecimento");
 const inputEstabelecimento = document.getElementById("estabelecimento");
+
 const inputDataConsulta = document.getElementById("data-consulta");
 const listaDiaria = document.getElementById("lista-diaria");
 const btnMovDelMode = document.getElementById("btn-mov-del-mode");
@@ -148,7 +141,7 @@ function atualizarVisibilidadeContaPredefinida() {
     }
   }
 
-  // ESTABELECIMENTO: só em SAÍDA
+  // estabelecimento só em saída
   if (campoEstabelecimento) {
     campoEstabelecimento.style.display = isSaida ? "flex" : "none";
     if (!isSaida) {
@@ -221,7 +214,7 @@ function atualizarMovimentoMes() {
 // =========================
 
 inputValor.addEventListener("input", () => {
-  if (inputTipo.value === "conta") return; // conta predefinida não digita
+  if (inputTipo.value === "conta") return;
   aplicarMascaraMoeda(inputValor);
 });
 
@@ -264,12 +257,12 @@ formLancamento.addEventListener("submit", async (e) => {
 
   const dataISO = inputDataLancamento.value || hojeISO();
 
-    let contaId = null;
+  let contaId = null;
   let parcelaIndex = null;
   let descricao;
   let estabelecimento = null;
 
-   if (tipo === "conta") {
+  if (tipo === "conta") {
     contaId = selectContaPredefinida.value || null;
     parcelaIndex = selectParcelaConta.value
       ? parseInt(selectParcelaConta.value, 10)
@@ -308,7 +301,7 @@ formLancamento.addEventListener("submit", async (e) => {
     return;
   }
 
-    inputValor.value = "0,00";
+  inputValor.value = "0,00";
   inputDescricao.value = "";
   inputEstabelecimento.value = "";
 });
@@ -345,7 +338,7 @@ function renderizarListaDiaria() {
     const li = document.createElement("li");
     li.className = "item-movimento";
 
-        const divInfo = document.createElement("div");
+    const divInfo = document.createElement("div");
     divInfo.className = "mov-info";
 
     let titulo;

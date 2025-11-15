@@ -5,7 +5,7 @@
 const db = firebase.firestore();
 
 // =========================
-– Utilidades de data e dinheiro
+// Utilidades de data e dinheiro
 // =========================
 
 function hojeISO() {
@@ -132,7 +132,7 @@ function atualizarVisibilidadeContaPredefinida() {
   campoContaPredefinida.style.display = isConta ? "flex" : "none";
   campoParcelaConta.style.display = isConta ? "flex" : "none";
 
-  // descrição só aparece para entrada / saída
+  // descrição só pra entrada / saída
   if (campoDescricao) {
     if (!tipo || tipo === "conta") {
       campoDescricao.style.display = "none";

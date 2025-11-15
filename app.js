@@ -133,6 +133,7 @@ function inicializarDatas() {
 function atualizarVisibilidadeContaPredefinida() {
   const tipo = inputTipo.value;
   const isConta = tipo === "conta";
+  const isSaida = tipo === "saida";
 
   // campos específicos de conta
   campoContaPredefinida.style.display = isConta ? "flex" : "none";
@@ -147,18 +148,24 @@ function atualizarVisibilidadeContaPredefinida() {
     }
   }
 
+  // ESTABELECIMENTO: só em SAÍDA
+  if (campoEstabelecimento) {
+    campoEstabelecimento.style.display = isSaida ? "flex" : "none";
+    if (!isSaida) {
+      inputEstabelecimento.value = "";
+    }
+  }
+
   // valor digitável só para entrada / saída
   inputValor.readOnly = isConta;
 
   if (!isConta) {
-    // modo entrada/saída ou nada selecionado
     if (!tipo) {
       inputValor.value = "0,00";
     }
     selectContaPredefinida.value = "";
     selectParcelaConta.innerHTML = `<option value="">— selecione —</option>`;
   } else {
-    // modo conta predefinida: valor vem da parcela
     atualizarValorPorParcelaSelecionada();
   }
 }

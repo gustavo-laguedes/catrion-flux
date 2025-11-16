@@ -146,9 +146,11 @@
       <ul id="lista-contas" class="lista-contas">
         <!-- preenchido via JS -->
       </ul>
+    </section>
 
-      <!-- Botão Gerar Relatório -->
-      <div style="margin-top: 1rem; display:flex; justify-content:center;">
+    <!-- Botão Gerar Relatório (card separado) -->
+    <section class="card card-relatorio">
+      <div style="display:flex; justify-content:center;">
         <button
           type="button"
           class="btn-principal"
@@ -160,6 +162,10 @@
       </div>
     </section>
   </main>
+
+  <footer class="rodape">
+    <p>Finanças dos Muzis — 151125v1</p>
+  </footer>
 
   <!-- Modal nova/edição de conta -->
   <div class="modal-backdrop" id="modal-conta">
@@ -281,10 +287,6 @@
       </button>
     </div>
   </div>
-
-  <footer class="rodape">
-    <p>Finanças dos Muzis — 151125v0</p>
-  </footer>
 
   <!-- Firebase via CDN (compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>

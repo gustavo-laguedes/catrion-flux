@@ -65,23 +65,48 @@ let contaEmEdicaoId = null;
 
 let modoExclusaoMovimentos = false;
 
-// controle do splash de carregamento
 let carregouTransacoes = false;
 let carregouContas = false;
 let carregouEstabelecimentos = false;
 let splashRemovido = false;
 
+const MIN_SPLASH_MS = 2000;   // mínimo 2s na tela
+const MAX_SPLASH_MS = 8000;   // segurança: some em até 8s mesmo se algo der ruim
+let splashStart = Date.now();
+let splashTimeoutForcado = setTimeout(() => {
+  removerSplash();
+}, MAX_SPLASH_MS);
+
+function removerSplash() {
+  if (splashRemovido) return;
+  const splash = document.getElementById("splash-loading");
+  if (!splash) {
+    splashRemovido = true;
+    return;
+  }
+  splash.classList.add("splash-fade-out");
+  setTimeout(() => splash.remove(), 300);
+  splashRemovido = true;
+}
+
 function tentarEsconderSplash() {
   if (splashRemovido) return;
-  if (carregouTransacoes && carregouContas && carregouEstabelecimentos) {
-    const splash = document.getElementById("splash-loading");
-    if (splash) {
-      splash.classList.add("splash-fade-out");
-      setTimeout(() => splash.remove(), 300);
-    }
-    splashRemovido = true;
+  if (!(carregouTransacoes && carregouContas && carregouEstabelecimentos)) return;
+
+  const elapsed = Date.now() - splashStart;
+
+  if (elapsed >= MIN_SPLASH_MS) {
+    clearTimeout(splashTimeoutForcado);
+    removerSplash();
+  } else {
+    const restante = MIN_SPLASH_MS - elapsed;
+    setTimeout(() => {
+      clearTimeout(splashTimeoutForcado);
+      removerSplash();
+    }, restante);
   }
 }
+
 
 // =========================
 // Elementos da UI

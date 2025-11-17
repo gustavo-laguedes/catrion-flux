@@ -732,7 +732,7 @@ function preencherSelectEstabelecimentos() {
   // opção especial para cadastrar
   const optNovo = document.createElement("option");
   optNovo.value = "__novo__";
-  optNovo.textContent = "+ Cadastrar estabelecimento...";
+  optNovo.textContent = "+ Cadastrar";
   selectEstabelecimento.appendChild(optNovo);
 }
 

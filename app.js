@@ -912,7 +912,7 @@ async function gerarRelatorio() {
 
   let y = 38;
 
-  // Totais que vamos acumular
+  // Totais
   let totalGeral = 0;
   let totalEntradas = 0;
   let totalSaidas = 0;
@@ -923,6 +923,14 @@ async function gerarRelatorio() {
     if (y > 280) {
       doc.addPage();
       y = 20;
+    }
+  }
+
+  function linhaTracejada(x1, x2, yLine) {
+    const segmento = 3;
+    const gap = 2;
+    for (let x = x1; x < x2; x += segmento + gap) {
+      doc.line(x, yLine, Math.min(x + segmento, x2), yLine);
     }
   }
 
@@ -944,13 +952,12 @@ async function gerarRelatorio() {
       const fator = t.tipo === "entrada" ? 1 : -1;
       totalDia += fator * t.valor;
 
-      // acumula totas gerais
+      // acumula totais gerais
       if (t.tipo === "entrada") {
         totalEntradas += t.valor;
       } else {
         totalSaidas += t.valor;
 
-        // agrupar saídas por estabelecimento
         if (t.tipo === "saida") {
           const nomeEst = t.estabelecimento || "Outros";
           mapaSaidasEstab[nomeEst] = (mapaSaidasEstab[nomeEst] || 0) + t.valor;
@@ -986,13 +993,24 @@ async function gerarRelatorio() {
       quebraLinha(5);
     });
 
-    // total do dia
+    // espaçamento antes do total do dia
+    quebraLinha(2);
+
+    // linha tracejada separando lançamentos do total
+    doc.setDrawColor(...corLinha);
+    linhaTracejada(10, 200, y);
+    quebraLinha(3);
+
+    // total do dia (em negrito)
     const totalDiaAbs = Math.abs(totalDia);
     const totalDiaStr = formatarValorReal(totalDiaAbs);
     const xValorDia = 200 - 10;
 
+    doc.setFontSize(9);
     doc.setTextColor(...corTexto);
+    doc.setFont(undefined, "bold");
     doc.text("Total do dia:", 12, y);
+    doc.setFont(undefined, "normal");
 
     if (totalDia >= 0) {
       doc.setTextColor(...corPositivo);
@@ -1003,9 +1021,9 @@ async function gerarRelatorio() {
     }
 
     totalGeral += totalDia;
-    quebraLinha(6);
+    quebraLinha(8);
 
-    // linha separadora
+    // linha separadora entre dias
     doc.setDrawColor(...corLinha);
     doc.line(10, y, 200, y);
     quebraLinha(4);
@@ -1101,21 +1119,10 @@ async function gerarRelatorio() {
       quebraLinha(5);
     });
 
-    // Linha e total geral de saídas
+    // só uma linha de fechamento (sem repetir total geral de saídas)
     doc.setDrawColor(...corLinha);
     doc.line(10, y, 200, y);
     quebraLinha(4);
-
-    doc.setFontSize(10);
-    doc.setTextColor(...corTitulo);
-    doc.text("Total geral de saídas:", 12, y);
-    doc.setTextColor(...corNegativo);
-    doc.text(
-      "-" + formatarValorReal(totalSaidas),
-      200 - 10,
-      y,
-      { align: "right" }
-    );
   }
 
   const nomeArquivo = mesSel
@@ -1131,6 +1138,7 @@ async function gerarRelatorio() {
 
   fecharModalRelatorio();
 }
+
 
 
 // =========================

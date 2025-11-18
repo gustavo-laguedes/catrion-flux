@@ -8,7 +8,6 @@
 #splash-loading {
   position: fixed;
   inset: 0;
-  background: #ffffff;           /* tela toda branca */
   display: flex;
   flex-direction: column;
   align-items: center;

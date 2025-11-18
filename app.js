@@ -939,7 +939,7 @@ async function gerarRelatorio() {
   // Cabeçalho
   doc.setFontSize(16);
   doc.setTextColor(...corTitulo);
-  doc.text("Relatório de Finanças dos Muzis", 105, 15, { align: "center" });
+  doc.text("Relatório de Catrion Flux", 105, 15, { align: "center" });
 
   doc.setFontSize(12);
   doc.setTextColor(...corSub);

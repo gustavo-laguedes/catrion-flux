@@ -466,9 +466,13 @@ body {
 }
 
 .flux-logo {
-  width: 120px;      /* ajuste como quiser */
+  width: 120px;     /* é aqui que controla o tamanho */
+  max-width: 40vw;  /* só por segurança */
   height: auto;
+  display: block;
+  margin: 0 auto;
 }
+
 
 .subtitle {
   margin-top: 0.5rem;

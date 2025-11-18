@@ -939,7 +939,7 @@ async function gerarRelatorio() {
   // Cabeçalho
   doc.setFontSize(16);
   doc.setTextColor(...corTitulo);
-  doc.text("Relatório de Finanças dos Muzis", 105, 15, { align: "center" });
+  doc.text("Relatório de Finanças Flux", 105, 15, { align: "center" });
 
   doc.setFontSize(12);
   doc.setTextColor(...corSub);
@@ -1169,8 +1169,8 @@ async function gerarRelatorio() {
   }
 
   const nomeArquivo = mesSel
-    ? `relatorio-muzis-${String(mesSel).padStart(2,"0")}-${ano}.pdf`
-    : `relatorio-muzis-${ano}.pdf`;
+    ? `relatorio-flux-${String(mesSel).padStart(2,"0")}-${ano}.pdf`
+    : `relatorio-flux-${ano}.pdf`;
 
   try {
     const blobUrl = doc.output("bloburl");

@@ -466,7 +466,7 @@ body {
   align-items: center;
 }
 
-.flux-logo {
+.flux-topbar {
   width: 120px;     /* é aqui que controla o tamanho */
   max-width: 40vw;  /* só por segurança */
   height: auto;

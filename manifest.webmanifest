@@ -1,13 +1,13 @@
 {
-  "name": "Finanças dos Muzis",
-  "short_name": "Muzis",
+  "name": "Catrion Flux",
+  "short_name": "Flux",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icons/muzis-1024.PNG",
+      "src": "icons/flux-logo.PNG",
       "sizes": "1024x1024",
       "type": "image/png"
     }

@@ -7,7 +7,7 @@
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icons/flux-logo.PNG",
+      "src": "icons/flux-logo.png",
       "sizes": "1024x1024",
       "type": "image/png"
     }

@@ -422,6 +422,11 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+#lista-estabelecimentos {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
 .modal-pequeno {
   max-width: 320px;
 }

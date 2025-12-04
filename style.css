@@ -415,6 +415,11 @@ body {
   max-width: 420px;
   width: 100%;
   box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+
+  /* NOVO: limita altura e coloca scroll interno */
+  max-height: 80vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-pequeno {
@@ -473,7 +478,6 @@ body {
   display: block;
   margin: 0 auto;
 }
-
 
 .subtitle {
   margin-top: 1.0rem;
